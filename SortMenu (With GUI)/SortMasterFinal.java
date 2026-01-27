@@ -33,7 +33,10 @@ public class SortMasterFinal extends JFrame {
     private ModernButton btnSave, btnBub, btnIns, btnMrg;
     private int[] benchmarkData = null;
     private int[] sortedData = null;
+    
+    // --- SMART FINDER VARIABLES ---
     private String currentFilename = "dataset.txt";
+    private File actualFileRef = null; // <--- Stores the exact location of the found file
 
     // TAB 2: Visualizer
     private VisualPanel visualPanel;
@@ -62,12 +65,12 @@ public class SortMasterFinal extends JFrame {
         tabbedPane.setBackground(COL_BG_MAIN);
         tabbedPane.setForeground(COL_TEXT_MAIN);
         
-        // NO EMOJIS in Tabs
         tabbedPane.addTab("  Benchmark & Analysis  ", createBenchmarkPanel());
         tabbedPane.addTab("  Real-Time Visualizer  ", createVisualizerPanel());
 
         add(tabbedPane);
         
+        // Initial Load
         loadBenchmarkData("dataset.txt");
 
         visualStopwatch = new Timer(100, e -> {
@@ -97,7 +100,6 @@ public class SortMasterFinal extends JFrame {
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(COL_TEXT_MAIN);
         
-        // Removed Emojis here
         lblCurrentFile = new JLabel("Current File: None");
         lblCurrentFile.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblCurrentFile.setForeground(COL_ACCENT);
@@ -109,10 +111,9 @@ public class SortMasterFinal extends JFrame {
         JPanel fileControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         fileControls.setBackground(COL_BG_MAIN);
         
-        // --- BUTTONS (PLAIN TEXT) ---
         ModernButton btnLoad = new ModernButton("Load File", COL_BG_PANEL, COL_TEXT_MAIN);
         ModernButton btnGen  = new ModernButton("Generate Custom Data", COL_ACCENT, Color.WHITE);
-        ModernButton btnView = new ModernButton("View Raw Data", COL_BG_PANEL, COL_TEXT_MAIN); // NEW BUTTON
+        ModernButton btnView = new ModernButton("View Raw Data", COL_BG_PANEL, COL_TEXT_MAIN);
 
         fileControls.add(btnView);
         fileControls.add(btnLoad);
@@ -139,7 +140,6 @@ public class SortMasterFinal extends JFrame {
         lblLogTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblLogTitle.setForeground(COL_TEXT_SUB);
         
-        // Plain text "Clear Log"
         JButton btnClearLog = new JButton("Clear Log");
         btnClearLog.setContentAreaFilled(false);
         btnClearLog.setBorderPainted(false);
@@ -207,7 +207,7 @@ public class SortMasterFinal extends JFrame {
         // Listeners
         btnLoad.addActionListener(e -> loadCustomFile());
         btnGen.addActionListener(e -> generateCustomData());
-        btnView.addActionListener(e -> viewCurrentFile()); // NEW ACTION
+        btnView.addActionListener(e -> viewCurrentFile()); 
         
         btnBub.addActionListener(e -> { updateInfoPanel("Bubble"); runBenchmarkSort(1); });
         btnIns.addActionListener(e -> { updateInfoPanel("Insertion"); runBenchmarkSort(2); });
@@ -222,15 +222,15 @@ public class SortMasterFinal extends JFrame {
     }
 
     // ==========================================
-    //       NEW FEATURE: VIEW FILE
+    //       VIEW FILE (UPDATED)
     // ==========================================
     private void viewCurrentFile() {
-        if (currentFilename == null || currentFilename.isEmpty()) {
+        if (actualFileRef == null || !actualFileRef.exists()) {
             JOptionPane.showMessageDialog(this, "No file loaded!");
             return;
         }
 
-        JDialog viewDialog = new JDialog(this, "Viewing: " + currentFilename, true);
+        JDialog viewDialog = new JDialog(this, "Viewing: " + actualFileRef.getName(), true);
         viewDialog.setSize(600, 500);
         viewDialog.setLocationRelativeTo(this);
         viewDialog.setLayout(new BorderLayout());
@@ -244,27 +244,21 @@ public class SortMasterFinal extends JFrame {
         contentArea.setWrapStyleWord(true);
         contentArea.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Read file content
+        // Read file content using the actualFileRef
         try {
-            File f = new File(currentFilename);
-            if (f.exists()) {
-                Scanner sc = new Scanner(f);
-                StringBuilder sb = new StringBuilder();
-                int count = 0;
-                while (sc.hasNext()) {
-                    sb.append(sc.next()).append(" ");
-                    count++;
-                    // Preview limit to prevent crash on huge files
-                    if (count > 2000) { 
-                        sb.append("\n\n[... Display limited to first 2000 items ...]");
-                        break; 
-                    }
+            Scanner sc = new Scanner(actualFileRef);
+            StringBuilder sb = new StringBuilder();
+            int count = 0;
+            while (sc.hasNext()) {
+                sb.append(sc.next()).append(" ");
+                count++;
+                if (count > 2000) { 
+                    sb.append("\n\n[... Display limited to first 2000 items ...]");
+                    break; 
                 }
-                sc.close();
-                contentArea.setText(sb.toString());
-            } else {
-                contentArea.setText("Error: File not found on disk.");
             }
+            sc.close();
+            contentArea.setText(sb.toString());
         } catch (Exception e) {
             contentArea.setText("Error reading file.");
         }
@@ -272,7 +266,7 @@ public class SortMasterFinal extends JFrame {
         JScrollPane scroll = new JScrollPane(contentArea);
         scroll.setBorder(null);
 
-        JLabel lblTitle = new JLabel("  Raw Data Preview (Shows Randomness)");
+        JLabel lblTitle = new JLabel("  Raw Data Preview (Showing " + actualFileRef.getName() + ")");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblTitle.setForeground(COL_TEXT_MAIN);
         lblTitle.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -318,7 +312,6 @@ public class SortMasterFinal extends JFrame {
         tutorial.setAlignmentX(Component.LEFT_ALIGNMENT);
         tutorial.setBorder(new EmptyBorder(15, 0, 15, 0));
 
-        // PLAIN TEXT BUTTONS
         ModernButton btnShuffle = new ModernButton("Shuffle Data", COL_DANGER, Color.WHITE);
         
         lblSpeedValue = new JLabel("Animation Speed: 50%");
@@ -474,34 +467,76 @@ public class SortMasterFinal extends JFrame {
 
     private void loadCustomFile() {
         String filename = JOptionPane.showInputDialog(this, "Filename:", currentFilename);
-        if (filename != null) { currentFilename = filename; loadBenchmarkData(filename); }
+        if (filename != null) { 
+            currentFilename = filename; 
+            loadBenchmarkData(filename); 
+        }
     }
 
+    // --- SMART FILE LOADING ---
     private void loadBenchmarkData(String filename) {
         try {
+            // 1. Try default location
             File f = new File(filename);
+            
+            // 2. SMART SEARCH: If not in default location, search project recursively
             if (!f.exists()) {
+                log("Searching for '" + filename + "' in project...");
+                File currentDir = new File(System.getProperty("user.dir"));
+                f = findFileRecursive(currentDir, filename);
+            }
+
+            // 3. Final check
+            if (f == null || !f.exists()) {
                 log("File not found: " + filename);
                 lblCurrentFile.setText("No File Loaded");
                 lblCurrentFile.setForeground(COL_DANGER);
                 toggleSortButtons(false);
                 return;
             }
+
+            // Store the actual file reference (important for Viewing later)
+            this.actualFileRef = f;
+
             Scanner sc = new Scanner(f);
             ArrayList<Integer> list = new ArrayList<>();
             while (sc.hasNext()) { if(sc.hasNextInt()) list.add(sc.nextInt()); else sc.next(); }
             sc.close();
+            
             benchmarkData = new int[list.size()];
             for (int i=0; i<list.size(); i++) benchmarkData[i] = list.get(i);
             
-            log("Loaded " + filename + " (" + benchmarkData.length + " items)");
-            lblCurrentFile.setText("Current File: " + filename);
+            // Log success with full path info if it was found elsewhere
+            if (!f.getName().equals(filename) || !f.getParent().equals(System.getProperty("user.dir"))) {
+                 log("Found at: " + f.getAbsolutePath());
+            } else {
+                 log("Loaded " + filename + " (" + benchmarkData.length + " items)");
+            }
+            
+            lblCurrentFile.setText("File: " + f.getName());
             lblCurrentFile.setForeground(COL_ACCENT);
             toggleSortButtons(true);
             lblTimeResult.setText("Ready");
             
         } catch (Exception e) { log("Error loading file."); }
     }
+
+    // --- RECURSIVE HELPER ---
+    private File findFileRecursive(File directory, String filename) {
+        File target = new File(directory, filename);
+        if (target.exists()) return target;
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory() && !f.getName().startsWith(".")) { // Skip hidden folders
+                    File found = findFileRecursive(f, filename);
+                    if (found != null) return found;
+                }
+            }
+        }
+        return null;
+    }
+    // ------------------------
 
     private void toggleSortButtons(boolean enabled) {
         btnBub.setEnabled(enabled); btnIns.setEnabled(enabled); btnMrg.setEnabled(enabled);
@@ -512,7 +547,9 @@ public class SortMasterFinal extends JFrame {
             List<Integer> nums = new ArrayList<>();
             for(int i=1; i<=count; i++) nums.add(i);
             Collections.shuffle(nums);
-            FileWriter w = new FileWriter(name);
+            // Optional: Save file to where the previous one was found, otherwise default root
+            File saveLoc = (actualFileRef != null) ? new File(actualFileRef.getParent(), name) : new File(name);
+            FileWriter w = new FileWriter(saveLoc);
             for(int n : nums) w.write(n + " ");
             w.close();
         } catch(Exception e) {}
@@ -522,11 +559,16 @@ public class SortMasterFinal extends JFrame {
         if(sortedData == null) return;
         try {
             String name = "sorted_numbers.txt";
-            int c = 2; File f = new File(name);
-            while(f.exists()) { name = "sorted_numbers_" + c + ".txt"; f = new File(name); c++; }
-            FileWriter w = new FileWriter(name);
+            int c = 2; 
+            // Try to save next to the original file
+            File dir = (actualFileRef != null) ? actualFileRef.getParentFile() : new File(".");
+            File f = new File(dir, name);
+            
+            while(f.exists()) { name = "sorted_numbers_" + c + ".txt"; f = new File(dir, name); c++; }
+            
+            FileWriter w = new FileWriter(f);
             for(int n : sortedData) w.write(n + " "); w.close();
-            JOptionPane.showMessageDialog(this, "Saved: " + name);
+            JOptionPane.showMessageDialog(this, "Saved to: " + f.getAbsolutePath());
         } catch(Exception e) { log("Save failed."); }
     }
 
