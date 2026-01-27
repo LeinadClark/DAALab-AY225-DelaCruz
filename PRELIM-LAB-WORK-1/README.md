@@ -1,6 +1,9 @@
 Empirical Analysis of Exchange Sorts (Bubble Sort)
 
-
+Prelim Lab Work 1
+**Student:** Leinad Clark M. Dela Cruz
+**Course:** BSCS 2106L 
+ 
 Overview
 This console-based Java application implements **Bubble Sort** to analyze its performance on large datasets. It specifically allows for the generation and sorting of a randomized dataset containing **10,000 integers**, measuring the "cost" of nested iterations in execution time.
 

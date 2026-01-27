@@ -1,8 +1,9 @@
 # 🚀 Sort Master Ultimate (GUI)
 
-**Student:** [Your Name Here]
-**Course:** [Your Course Code]
-**Assignment:** Prelim Lab Work 1
+Prelim Lab Work 2
+**Student:** Leinad Clark M. Dela Cruz
+**Course:** BSCS 2106L 
+ 
 
 ## 📋 Overview
 **Sort Master Ultimate** is a robust Java Swing application designed to analyze the performance of sorting algorithms. Unlike simple console programs, this tool offers a graphical interface to generate datasets, visualize sorting in real-time, and benchmark execution speeds with high precision.
