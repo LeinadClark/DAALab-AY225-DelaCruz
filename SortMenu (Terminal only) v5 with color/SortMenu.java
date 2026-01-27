@@ -128,7 +128,7 @@ public class SortMenu {
         
         if (data.length > 50000 && (choice == 1 || choice == 2)) {
             System.out.println(YELLOW + " >> NOTE: Large file detected." + RESET);
-            System.out.println(YELLOW + " >> Bubble/Insertion sort may take 1-5 minutes." + RESET);
+            System.out.println(YELLOW + " >> Bubble/Insertion sort may take 10 - 30 seconds." + RESET);
         }
 
         System.out.println(" >> Sorting... Please wait...");
