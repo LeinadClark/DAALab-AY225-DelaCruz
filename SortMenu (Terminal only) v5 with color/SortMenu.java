@@ -66,8 +66,8 @@ public class SortMenu {
     public static void handleDatasetMenu(Scanner console) {
         clearScreen();
         printHeader("DATASET MANAGER");
-        printRow(CYAN + "[1]" + RESET + " Select 'dataset.txt' (100k Unique)");
-        printRow(CYAN + "[2]" + RESET + " Select 'dataset2.txt' (10k Unique)");
+        printRow(CYAN + "[1]" + RESET + " Select 'dataset.txt' (10k Unique)");
+        printRow(CYAN + "[2]" + RESET + " Select 'dataset2.txt' (100k Unique)");
         printRow(CYAN + "[3]" + RESET + " GENERATE/SAVE (Overwrite old files)");
         printRow(RED  + "[0]" + RESET + " Back to Main Menu");
         printDivider();
