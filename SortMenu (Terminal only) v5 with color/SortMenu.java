@@ -213,25 +213,47 @@ public class SortMenu {
         }
     }
 
-    public static int[] loadDataset(String filename) {
+public static int[] loadDataset(String filename) {
         ArrayList<Integer> list = new ArrayList<>();
         boolean foundGarbage = false;
 
+        // --- SMART FILE FINDER (SEARCH PARTY) ---
+        // 1. First, try the basic location (current folder)
+        File file = new File(filename);
+
+        // 2. If not found, search recursively in the current directory and sub-directories
+        if (!file.exists()) {
+            System.out.println(YELLOW + " >> Searching for '" + filename + "' in project folders..." + RESET);
+            File currentDir = new File(System.getProperty("user.dir"));
+            file = findFileRecursive(currentDir, filename);
+        }
+        
+        // 3. If still null, we truly can't find it
+        if (file == null || !file.exists()) {
+             printError("File '" + filename + "' not found.");
+             System.out.println(" >> Scanned directory: " + System.getProperty("user.dir"));
+             System.out.println(" >> Please go to OPTIONS and Generate Files first.");
+             return null;
+        } else {
+            // Optional: Tell the user where we found it, so they know it worked
+            // System.out.println(GREEN + " >> Found file at: " + file.getAbsolutePath() + RESET);
+        }
+        // --- END SMART FINDER ---
+
         try {
-            Scanner fileReader = new Scanner(new File(filename));
+            Scanner fileReader = new Scanner(file);
             while (fileReader.hasNext()) {
                 if (fileReader.hasNextInt()) {
                     list.add(fileReader.nextInt());
                 } else {
-                    String trash = fileReader.next();
-                    System.out.println(RED + " >> [!] Found invalid data '" + trash + "'. Removed it." + RESET);
+                    fileReader.next(); // Skip garbage
                     foundGarbage = true;
                 }
             }
             fileReader.close();
         } catch (FileNotFoundException e) {
-            printError("File '" + filename + "' not found.");
-            System.out.println(" >> Please go to OPTIONS and Generate Files first.");
+            // This catch block is technically redundant now due to our checks above, 
+            // but kept for safety.
             return null;
         }
 
@@ -242,6 +264,32 @@ public class SortMenu {
         int[] arr = new int[list.size()];
         for (int i = 0; i < list.size(); i++) arr[i] = list.get(i);
         return arr;
+    }
+
+    // --- HELPER FUNCTION: RECURSIVE SEARCH ---
+    // This helper looks inside folders, and folders inside folders...
+    public static File findFileRecursive(File directory, String filename) {
+        // Check if the file is in this directory
+        File target = new File(directory, filename);
+        if (target.exists()) {
+            return target;
+        }
+
+        // Get a list of all files/folders here
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                // If we find a folder, dive into it (Recurse)
+                // We skip hidden folders (starting with .) like .git or .vscode to be faster
+                if (f.isDirectory() && !f.getName().startsWith(".")) {
+                    File found = findFileRecursive(f, filename);
+                    if (found != null) {
+                        return found;
+                    }
+                }
+            }
+        }
+        return null; // Not found in this branch
     }
 
     public static void generateUniqueFile(String filename, int count) {
